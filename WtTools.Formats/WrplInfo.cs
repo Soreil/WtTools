@@ -12,20 +12,20 @@ namespace WtTools.Formats
     public class WrplInfo
     {
         public uint Version { get; private set; }
-        public string Level { get; private set; }
-        public string LevelSettings { get; private set; }
-        public string BattleLayout { get; private set; }
-        public string Environment { get; private set; }
-        public string Visibility { get; private set; }
+        public string? Level { get; private set; }
+        public string? LevelSettings { get; private set; }
+        public string? BattleLayout { get; private set; }
+        public string? Environment { get; private set; }
+        public string? Visibility { get; private set; }
         public ulong Ssid { get; private set; }
-        public string Location { get; private set; }
+        public string? Location { get; private set; }
         public uint StartTime { get; private set; }
         public uint TimeLimit { get; private set; }
         public uint ScoreLimit { get; private set; }
-        public string BattleType { get; private set; }
-        public string BattleKillStreak { get; private set; }
+        public string? BattleType { get; private set; }
+        public string? BattleKillStreak { get; private set; }
         public BlkInfo MSet { get; private set; }
-        public BlkInfo Rez { get; private set; }
+        public BlkInfo? Rez { get; private set; }
         public byte[] Wrplu { get; private set; }
 
         private const uint MAGIC = 0x1000ace5;

@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using WtTools.Formats.Extensions;
 using WtTools.Formats.Vromfs;
+
 using ZstdNet;
 
 namespace WtTools.Formats
@@ -13,14 +11,14 @@ namespace WtTools.Formats
     public class VromfsInfo
     {
         internal Header Header { get; set; }
-        internal ExtHeader ExtHeader { get; set; }
+        internal ExtHeader? ExtHeader { get; set; }
 
         private static readonly byte[] _firstObfs = new byte[] { 0x55, 0xaa, 0x55, 0xaa, 0x0f, 0xf0, 0x0f, 0xf0, 0x55, 0xaa, 0x55, 0xaa, 0x48, 0x12, 0x48, 0x12 };
         private static readonly byte[] _secondObfs = new byte[] { 0x48, 0x12, 0x48, 0x12, 0x55, 0xaa, 0x55, 0xaa, 0x0f, 0xf0, 0x0f, 0xf0, 0x55, 0xaa, 0x55, 0xaa };
 
         internal NameMap NameMap { get; set; }
-        public FileRecord[] Files { get; set; }
-        internal DecompressionOptions DecompressionOptions { get; set; }
+        public FileRecord[]? Files { get; set; }
+        internal DecompressionOptions? DecompressionOptions { get; set; }
 
         /// <summary>
         /// Read Virtual ROM File System file 
@@ -54,7 +52,7 @@ namespace WtTools.Formats
             data = Decompress(data);
             ReadFiles(data);
         }
-        
+
         #region Processing
 
         /// <summary>
@@ -73,7 +71,7 @@ namespace WtTools.Formats
                 result[i] = (byte)(result[i] ^ _firstObfs[i]);
                 result[j] = (byte)(result[j] ^ _secondObfs[i]);
             }
-            
+
             return result;
         }
 
@@ -108,46 +106,46 @@ namespace WtTools.Formats
             var firstFilenameOffset = reader.ReadUInt32();
             stream.Seek(firstFilenameOffset, SeekOrigin.Begin);
 
-            Files = new FileRecord[filesCount];
+            var Names = new string[filesCount];
+            var Offsets = new uint[filesCount];
+            var Sizes = new int[filesCount];
+            var Datas = new byte[filesCount][];
+
             int nmIndex = 0, dictIndex = 0;
             bool nmFound = false, dictFound = false;
             for (int i = 0; i < filesCount; ++i)
             {
-                var record = new FileRecord()
-                {
-                    Name = reader.BaseStream.ReadTerminatedString()
-                };
-                if (!dictFound && record.Name.EndsWith(".dict"))
+                var Name = reader.BaseStream.ReadTerminatedString();
+                if (!dictFound && Name.EndsWith(".dict"))
                 {
                     dictIndex = i;
                     dictFound = true;
                 }
-                else if (!nmFound && record.Name.EndsWith("?nm"))
+                else if (!nmFound && Name.EndsWith("?nm"))
                 {
-                    record.Name = "nm";
+                    Name = "nm";
                     nmIndex = i;
                     nmFound = true;
                 }
-                Files[i] = record;
+                Names[i] = Name;
             }
 
             stream.Seek(dataOffset, SeekOrigin.Begin);
             for (int i = 0; i < filesCount; ++i)
             {
-                Files[i].Offset = reader.ReadUInt32();
-                Files[i].Size = (int)reader.ReadUInt32();
+                Offsets[i] = reader.ReadUInt32();
+                Sizes[i] = (int)reader.ReadUInt32();
                 reader.BaseStream.Seek(8, SeekOrigin.Current);
             }
             var dataSpan = data.AsSpan();
 
             for (int i = 0; i < filesCount; ++i)
             {
-                //stream.Seek(Files[i].Offset, SeekOrigin.Begin);
-                Files[i].Data = dataSpan.Slice((int)Files[i].Offset, Files[i].Size).ToArray();
+                Datas[i] = dataSpan.Slice((int)Offsets[i], Sizes[i]).ToArray();
             }
             if (dictFound)
             {
-                DecompressionOptions = new DecompressionOptions(Files[dictIndex].Data);
+                DecompressionOptions = new DecompressionOptions(Datas[dictIndex]);
             }
             else
             {
@@ -156,7 +154,14 @@ namespace WtTools.Formats
 
             if (nmFound)
             {
-                NameMap = new NameMap(Files[nmIndex].Data, DecompressionOptions);
+                NameMap = new NameMap(Datas[nmIndex], DecompressionOptions);
+            }
+
+            Files = new FileRecord[filesCount];
+
+            for (int i = 0; i < Files.Length; i++)
+            {
+                Files[i] = new FileRecord(Names[i], Sizes[i], Offsets[i], Datas[i]);
             }
         }
     }
