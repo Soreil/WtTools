@@ -204,13 +204,16 @@ public class BlkInfo
                     };
                     p.Value = p.Type switch
                     {
-                        DataType.Str => vValue,
-                        DataType.Int => int.Parse(vValue),
-                        DataType.Float => float.Parse(vValue, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture),
-                        DataType.Long => long.Parse(vValue),
-                        DataType.Color => vValue.Split(',').Select(b => byte.Parse(b)).ToArray(),
-                        DataType.Vec2F or DataType.Vec3F or DataType.Vec4F => vValue.Split(',').Select(b => float.Parse(b, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture)).ToArray(),
-                        DataType.Vec2 or DataType.Vec3 => vValue.Split(',').Select(b => uint.Parse(b)).ToArray(),
+                        DataType.Str => new StringParam(vValue),
+                        DataType.Int => new IntParam(int.Parse(vValue)),
+                        DataType.Float => new FloatParam(float.Parse(vValue, NumberStyles.Any, CultureInfo.InvariantCulture)),
+                        DataType.Long => new LongParam(long.Parse(vValue)),
+                        DataType.Color => new ColorParam(vValue.Split(',').Select(b => byte.Parse(b)).ToArray()),
+                        DataType.Vec2F => new FloatVec2(vValue.Split(',').Select(b => float.Parse(b, NumberStyles.Any, CultureInfo.InvariantCulture)).ToArray()),
+                        DataType.Vec3F => new FloatVec3(vValue.Split(',').Select(b => float.Parse(b, NumberStyles.Any, CultureInfo.InvariantCulture)).ToArray()),
+                        DataType.Vec4F => new FloatVec4(vValue.Split(',').Select(b => float.Parse(b, NumberStyles.Any, CultureInfo.InvariantCulture)).ToArray()),
+                        DataType.Vec2 => new UIntVec2(vValue.Split(',').Select(b => uint.Parse(b)).ToArray()),
+                        DataType.Vec3 => new UIntVec3(vValue.Split(',').Select(b => uint.Parse(b)).ToArray()),
                         _ => throw new NotImplementedException($"Unrecognized type: {vType}")
                     };
                 }

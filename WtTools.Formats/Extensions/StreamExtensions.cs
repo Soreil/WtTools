@@ -6,7 +6,7 @@ namespace WtTools.Formats.Extensions;
 
 public static class StreamExtensions
 {
-    public async static Task<byte[]> ReadToEndAsync(this BinaryReader reader)
+    private async static Task<byte[]> ReadToEndAsync(BinaryReader reader)
     {
         using var ms = new MemoryStream();
         await reader.BaseStream.CopyToAsync(ms);
@@ -14,7 +14,7 @@ public static class StreamExtensions
     }
     public static byte[] ReadToEnd(this BinaryReader reader)
     {
-        return reader.ReadToEndAsync().GetAwaiter().GetResult();
+        return ReadToEndAsync(reader).GetAwaiter().GetResult();
     }
 
     public static string ReadTerminatedString(this Stream stream)

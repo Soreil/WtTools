@@ -34,6 +34,9 @@ internal struct BlockInfo
         BlockOffset = 0;
     }
 
+    //We have to type this since we are working with parambase objects now instead of just generic object
+    //The JSON deserializer does not know how to access the underlying values in the parambase objects
+    //correctly
     public Dictionary<string, object> ToDictionary()
     {
         var result = new Dictionary<string, object>();
@@ -41,12 +44,15 @@ internal struct BlockInfo
         {
             foreach (var item in Params)
             {
+                //If we already have a copy of a parameter with this item name
                 if (result.ContainsKey(item.Name))
                 {
+                    //If this item is already stored as a list we can just append to it
                     if (result[item.Name] is List<object> list)
                     {
                         list.Add(item.Value);
                     }
+                    //If this item is stored as just a single value we will have to turn it in to a list and append the next values
                     else
                     {
                         var temp = new List<object>
@@ -57,6 +63,7 @@ internal struct BlockInfo
                         result[item.Name] = temp;
                     }
                 }
+                //New item found, add it as a single item
                 else
                 {
                     result.Add(item.Name, item.Value);
